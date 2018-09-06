@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"rsc.io/pdf"
 )
@@ -36,16 +38,30 @@ func main() {
 		usage()
 	}
 
-	reader, err := pdf.Open(flag.Arg(0))
+	err := os.MkdirAll(*outFilepath, 0644)
 	if err != nil {
-		fatalf("file error %s", flag.Arg(0))
+		fatalf("fatal error %v", err)
 	}
 
-	for i := 1; i <= reader.NumPage(); i++ {
-		for _, t := range reader.Page(i).Content().Text {
-			fmt.Println(t)
+	for _, in := range flag.Args() {
+		reader, err := pdf.Open(in)
+		if err != nil {
+			fatalf("fatal error %v", err)
 		}
-	}
-	fmt.Println("--")
 
+		out := strings.Replace(filepath.Join(*outFilepath, filepath.Base(in)), ".pdf", ".txt", 1)
+		writer, err := os.Create(out)
+		if err != nil {
+			fatalf("fatal error %v", err)
+		}
+
+		var b strings.Builder
+		for i := 1; i <= reader.NumPage(); i++ {
+			for _, t := range reader.Page(i).Content().Text {
+				fmt.Fprintf(&b, "%v", t.S)
+			}
+		}
+		fmt.Fprintf(writer, "%v\n", b.String())
+		writer.Close()
+	}
 }
