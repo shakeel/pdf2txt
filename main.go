@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"rsc.io/pdf"
+	"github.com/shakeel/pdf2txt/pdf"
 )
 
 var (
